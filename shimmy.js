@@ -12,7 +12,7 @@ function center(el) {
         }
 }
 
-angular.module('binnj.shimmy', [])
+angular.module('angular-shimmy', [])
 
 .directive('shimmyButton', function($compile) {
     return {
