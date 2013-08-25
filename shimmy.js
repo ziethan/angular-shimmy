@@ -1,3 +1,15 @@
+function generateId(length) {
+    var i, l = length || 10,
+        an = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWSXYZ',
+        id = '';
+    
+    for(i=l;i--;) {
+        id += an.charAt((Math.random()*an.length)+1);
+    }
+    return id;
+    
+}
+
 function center(el) {
     var wH = $(window).height(),
         wW = $(window).width(),
@@ -9,7 +21,13 @@ function center(el) {
         return {
             top: top
           , left: left
-        }
+        };
+}
+
+function template(templateCache, contentTemplateUrl) {
+    var temp = generateId(20);
+    templateCache.put(temp, contentTemplateUrl);
+    return temp;
 }
 
 angular.module('angular-shimmy', [])
@@ -18,8 +36,8 @@ angular.module('angular-shimmy', [])
     return {
         restrict: 'E'
       , scope: {
-            shimmyClass:          '@'
-          , shimmyContentClass:   '@'
+            shimmyClass:        '@'
+          , shimmyContentClass: '@'
           , contentTemplate:    '@'
           , contentTemplateUrl: '@'
         }
@@ -35,7 +53,7 @@ angular.module('angular-shimmy', [])
                 document.body.appendChild($compile(el)(scope)[0]);
             });
         }
-    }
+    };
 })
 
 .directive('shimmy', function($compile) {
@@ -59,7 +77,7 @@ angular.module('angular-shimmy', [])
                 document.body.removeChild(elem[0]);
             });
         }
-    }
+    };
 })
 
 .directive('shimmyContent', function($compile, $timeout, $templateCache) {
@@ -72,7 +90,7 @@ angular.module('angular-shimmy', [])
         }
       , tranclude: true
       , link: function(scope, elem, attrs) {
-            var template = attrs.shimmyTemplate || $templateCache.get(attrs.contentTemplateUrl);
+            var template = attrs.contentTemplate || $templateCache.get(attrs.contentTemplateUrl) || $templateCache.get(template($templateCache, attrs.contentTemplateUrl)) || '';
             
             elem.append($compile(template)(scope));
             elem.toggleClass(attrs.shimmyContentClass);
@@ -84,7 +102,7 @@ angular.module('angular-shimmy', [])
                 });
             });
         }
-    }
+    };
 })
 
 .directive('shimmyClose', function() {
@@ -101,5 +119,13 @@ angular.module('angular-shimmy', [])
                 });
             });
         }
-    }
+    };
 });
+
+// Eventually become an example
+
+
+/*
+    <shimmy-button shimmy-class="foo" shimmy-content-class="shim-test-class" content-template-url="foo.html">Shimmy on over</shimmy-button>
+    <script type="text/ng-template" id="foo.html"><button class='btn btn-primary'>foo</button></script>
+*/
