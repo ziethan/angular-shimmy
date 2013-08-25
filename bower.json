@@ -1,0 +1,14 @@
+{
+    "author": "Zach McGrenere",
+    "name": "angular-shimmy",
+    "version": "0.1.1",
+    "homepage": "http://mcgrenere.com/angular-shimmy",
+    "keywords": [
+        "angular",
+        "shim"
+    ],
+    "main": "./src/shimmy.js",
+    "dependencies": {
+        "angular": ">= 1.0.5"
+    }
+}
