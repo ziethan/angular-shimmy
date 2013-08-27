@@ -40,6 +40,7 @@ angular.module('angular-shimmy', [])
           , shimmyContentClass: '@'
           , contentTemplate:    '@'
           , contentTemplateUrl: '@'
+          , closeable:          '@'
         }
       , tranclude: true
       , link: function(scope, elem, attrs) {
@@ -47,7 +48,8 @@ angular.module('angular-shimmy', [])
               , contentTemplateUrl = attrs.contentTemplateUrl || ""
               , shimmyClass = attrs.shimmyClass || ""
               , shimmyContentClass = attrs.shimmyContentClass || ""
-              , el = '<shimmy class="'+shimmyClass+'" shimmy-content-class="'+shimmyContentClass+'" content-template="'+contentTemplate+'" content-template-url="'+contentTemplateUrl+'"></shimmy>';
+              , closeable = attrs.closeable || false
+              , el = '<shimmy class="'+shimmyClass+'" shimmy-content-class="'+shimmyContentClass+'" closeable='+closeable+' content-template="'+contentTemplate+'" content-template-url="'+contentTemplateUrl+'"></shimmy>';
             
             elem.on('click', function() {
                 document.body.appendChild($compile(el)(scope)[0]);
@@ -62,20 +64,23 @@ angular.module('angular-shimmy', [])
       , scope: {
             contentTemplate:    '@'
           , contentTemplateUrl: '@'
-          , shimmyContentClass:   '@'
+          , shimmyContentClass: '@'
+          , closeable:          '@'
         }
       , controller: function($scope, $q) {
             $scope.defer = $q.defer();
-            return $scope.defer.promise;
+            return $scope.defer;
         }
       , transclude: true
-      , template: '<shimmy-content shimmy-content-class="{{shimmyContentClass}}" content-template="{{contentTemplate}}" content-template-url="{{contentTemplateUrl}}"><shimmy-close></shimmy-close></shimmy-content>'
+      , template: '<shimmy-content closeable="{{closeable}}" shimmy-content-class="{{shimmyContentClass}}" content-template="{{contentTemplate}}" content-template-url="{{contentTemplateUrl}}"></shimmy-content>'
       , link: function(scope, elem, attrs, ctrl) {
-            scope.defer.resolve(elem);
+            ctrl.resolve(elem);
             
-            elem.on('click', function() {
-                document.body.removeChild(elem[0]);
-            });
+            if(attrs.closeable) {
+                elem.on('click', function() {
+                    document.body.removeChild(elem[0]);
+                });
+            }
         }
     };
 })
@@ -86,14 +91,19 @@ angular.module('angular-shimmy', [])
       , scope: {
             contentTemplate:    '@'
           , contentTemplateUrl: '@'
-          , shimmyContentClass:   '@'
+          , shimmyContentClass: '@'
+          , closeable:          '@'
         }
+      , require: '^shimmy'
       , tranclude: true
       , link: function(scope, elem, attrs) {
             var template = attrs.contentTemplate || $templateCache.get(attrs.contentTemplateUrl) || $templateCache.get(template($templateCache, attrs.contentTemplateUrl)) || '';
             
+            if(attrs.closeable) {
+                elem.append($compile('<shimmy-close></shimmy-close>')(scope));
+            }
             elem.append($compile(template)(scope));
-            elem.toggleClass(attrs.shimmyContentClass);
+            elem.addClass(attrs.shimmyContentClass);
             $timeout(function() {
                 var css = center(elem);
                 elem.css(css); 
@@ -108,21 +118,23 @@ angular.module('angular-shimmy', [])
 .directive('shimmyClose', function() {
     return {
         restrict: 'E'
-      , scope: {}
       , translude: true
-      , require: '^shimmy'
       , template: '<span>&times;</span>'
       , link: function(scope, elem, attrs, ctrl) {
-            ctrl.then(function(shimmy) {
-                elem.on('click', function() {
-                    document.body.removeChild(shimmy[0]);
-                });
+            scope.$watch('$parent', function(nv, ov) {
+                if(nv && nv.defer) {
+                    nv.defer.promise.then(function(shimmy) {
+                        elem.on('click', function() {
+                            document.body.removeChild(shimmy[0]);
+                        });
+                    });
+                }
             });
         }
     };
 });
 
-// Eventually become an example
+
 
 
 /*
