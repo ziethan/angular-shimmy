@@ -1,36 +1,46 @@
-function generateId(length) {
-    var i, l = length || 10,
-        an = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWSXYZ',
-        id = '';
-    
-    for(i=l;i--;) {
-        id += an.charAt((Math.random()*an.length)+1);
-    }
-    return id;
-    
-}
+angular.module('angular-shimmy', [])
 
-function center(el) {
-    var wH = $(window).height(),
-        wW = $(window).width(),
-        elH = el.height(),
-        elW = el.width(),
-        top = (wH - elH)/2,
-        left = (wW - elW)/2;
+.factory('shimmyCenter', function() {
+    function center(el) {
+        var wH = $(window).height(),
+            wW = $(window).width(),
+            elH = el.height(),
+            elW = el.width(),
+            top = (wH - elH)/2,
+            left = (wW - elW)/2;
         
         return {
             top: top
           , left: left
         };
-}
+    }
+    return center;
+})
 
-function template(templateCache, contentTemplateUrl) {
-    var temp = generateId(20);
-    templateCache.put(temp, contentTemplateUrl);
-    return temp;
-}
+.factory('shimmyGenerateId', function() {
+    function generateId(length) {
+        var i, l = length || 10,
+            an = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWSXYZ',
+            id = '';
+    
+        for(i=l;i--;) {
+            id += an.charAt((Math.random()*an.length)+1);
+        }
+        return id;
+    }
+    
+    return generateId;
+})
 
-angular.module('angular-shimmy', [])
+.factory('shimmyTemplate', function(shimmyGenerateId) {
+    function template(templateCache, contentTemplateUrl) {
+        var temp = shimmyGenerateId(20);
+        templateCache.put(temp, contentTemplateUrl);
+        return temp;
+    }
+        
+    return template;
+})
 
 .directive('shimmyButton', function($compile) {
     return {
@@ -85,7 +95,7 @@ angular.module('angular-shimmy', [])
     };
 })
 
-.directive('shimmyContent', function($compile, $timeout, $templateCache) {
+.directive('shimmyContent', function($compile, $timeout, $templateCache, shimmyTemplate, shimmyCenter) {
     return {
         restrict: 'E'
       , scope: {
@@ -97,7 +107,7 @@ angular.module('angular-shimmy', [])
       , require: '^shimmy'
       , tranclude: true
       , link: function(scope, elem, attrs) {
-            var template = attrs.contentTemplate || $templateCache.get(attrs.contentTemplateUrl) || $templateCache.get(template($templateCache, attrs.contentTemplateUrl)) || '';
+            var template = attrs.contentTemplate || $templateCache.get(attrs.contentTemplateUrl) || $templateCache.get(shimmyTemplate($templateCache, attrs.contentTemplateUrl)) || '';
             
             if(attrs.closeable) {
                 elem.append($compile('<shimmy-close></shimmy-close>')(scope));
@@ -105,7 +115,7 @@ angular.module('angular-shimmy', [])
             elem.append($compile(template)(scope));
             elem.addClass(attrs.shimmyContentClass);
             $timeout(function() {
-                var css = center(elem);
+                var css = shimmyCenter(elem);
                 elem.css(css); 
                 elem.on('click', function(e) {
                     e.stopPropagation();
